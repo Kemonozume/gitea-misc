@@ -23,7 +23,7 @@ import (
 	"code.gitea.io/gitea/modules/auth/ldap"
 	"code.gitea.io/gitea/modules/auth/pam"
 	"code.gitea.io/gitea/modules/log"
-	"github.com/Kemonozume/gitea/modules/custom"
+	"code.gitea.io/gitea/modules/custom"
 )
 
 // LoginType represents an login type.
