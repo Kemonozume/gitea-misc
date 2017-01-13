@@ -21,8 +21,8 @@ import (
 
 	"code.gitea.io/gitea/modules/auth/ldap"
 	"code.gitea.io/gitea/modules/auth/pam"
-	"code.gitea.io/gitea/modules/log"
 	"code.gitea.io/gitea/modules/custom"
+	"code.gitea.io/gitea/modules/log"
 )
 
 // LoginType represents an login type.
@@ -576,22 +576,22 @@ func UserSignIn(username, password string) (*User, error) {
 		if !valid {
 			return nil, ErrUserNotExist{0, username, 0}
 		} else {
-			u := &models.User{
+			u := &User{
 				Name:     username,
 				Email:    email,
 				Passwd:   password,
 				IsActive: true,
 			}
-			if err := models.CreateUser(u); err != nil {
+			if err := CreateUser(u); err != nil {
 				return nil, err
 			}
 			log.Trace("Account created: %s", u.Name)
 
 			// Auto-set admin for the only user.
-			if models.CountUsers() == 1 {
+			if CountUsers() == 1 {
 				u.IsAdmin = true
 				u.IsActive = true
-				if err := models.UpdateUser(u); err != nil {
+				if err := UpdateUser(u); err != nil {
 					return nil, err
 				}
 			}

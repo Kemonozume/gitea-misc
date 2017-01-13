@@ -13,5 +13,14 @@ func UserSignIn
 >log in user if he exists and password is correct
 
 sed -i 's,code.gitea.io/gitea,github.com/Kemonozume/gitea,g' main.go
-
 for f in $(find . -name '*.go'); do sed -i 's,code.gitea.io/gitea,github.com/Kemonozume/gitea,g' $f; done
+
+
+go get code.gitea.io/gitea/
+git remote add gitea-misc https://github.com/Kemonozume/gitea-misc.git
+git fetch gitea-misc
+
+git merge -X theirs --allow-unrelated-histories gitea-misc/master
+
+git merge -s ours --allow-unrelated-histories gitea-misc/master
+
