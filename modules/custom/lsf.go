@@ -13,20 +13,6 @@ const uri = "https://www.lsf.hs-weingarten.de/qisserver/servlet/" +
 	"de.his.servlet.RequestDispatcherServlet?state=user&" +
 	"type=1&category=auth.login&startpage=portal.vm"
 
-//lsfError ist ein instanziertes Objekt das
-//zur Rückgabe verwendet wird
-var lsfError lsferror = lsferror{}
-
-//lsferror ist ein Struct das beim Antreffen eines
-//HTTP-Statuscode 302 zurückgegeben wird
-type lsferror struct{}
-
-//Error() ist eine Funktion um das error Interface
-//mit dem Struct lsferror zu implementieren
-func (lsf lsferror) Error() string {
-	return "lsf_error"
-}
-
 //Instanzierter HTTP-Klient mit dem
 //alle LSF-Anfragen ausgeführt werden
 var clientRed = &http.Client{
@@ -41,7 +27,7 @@ var clientRed = &http.Client{
 //Redirect wird als Funktion verwendet um bei einem HTTP-Statuscode
 //302 einen lsfError zurückzugeben
 func Redirect(req *http.Request, via []*http.Request) error {
-	return lsfError
+	return errors.New("lsf_error")
 }
 
 func CheckValidUser(username, password string) (bool, error) {
@@ -70,10 +56,7 @@ func CheckValidUser(username, password string) (bool, error) {
 	resp, err := clientRed.Do(req)
 	//check if an error occured and if the error isnt the redirect prevention
 	if err != nil {
-		switch err.(type) {
-		case lsferror:
-			break
-		default:
+		if !strings.Contains(err.Error(), "lsf_error") {
 			return false, err
 		}
 	}
