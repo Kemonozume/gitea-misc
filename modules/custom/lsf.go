@@ -1,16 +1,34 @@
 package custom
 
 import (
-	"net/http"
 	"errors"
-	"time"
+	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
-const uri = "https://www.lsf.hs-weingarten.de/qisserver/servlet/de.his.servlet.RequestDispatcherServlet?state=user&type=1&category=auth.login&startpage=portal.vm"
-var lsf_err = errors.New("lsf_error")
+//URL der Adresse der LSF-Plattform für die Anmeldung
+const uri = "https://www.lsf.hs-weingarten.de/qisserver/servlet/" +
+	"de.his.servlet.RequestDispatcherServlet?state=user&" +
+	"type=1&category=auth.login&startpage=portal.vm"
 
+//lsfError ist ein instanziertes Objekt das
+//zur Rückgabe verwendet wird
+var lsfError lsferror = lsferror{}
+
+//lsferror ist ein Struct das beim Antreffen eines
+//HTTP-Statuscode 302 zurückgegeben wird
+type lsferror struct{}
+
+//Error() ist eine Funktion um das error Interface
+//mit dem Struct lsferror zu implementieren
+func (lsf lsferror) Error() string {
+	return "lsf_error"
+}
+
+//Instanzierter HTTP-Klient mit dem
+//alle LSF-Anfragen ausgeführt werden
 var clientRed = &http.Client{
 	Timeout:       5 * time.Second,
 	CheckRedirect: Redirect,
@@ -20,10 +38,10 @@ var clientRed = &http.Client{
 	},
 }
 
-//Redirect is used to prevent the http client from following the Location Header
-//if the http statuscode is 302
+//Redirect wird als Funktion verwendet um bei einem HTTP-Statuscode
+//302 einen lsfError zurückzugeben
 func Redirect(req *http.Request, via []*http.Request) error {
-	return lsf_err
+	return lsfError
 }
 
 func CheckValidUser(username, password string) (bool, error) {
@@ -51,10 +69,14 @@ func CheckValidUser(username, password string) (bool, error) {
 
 	resp, err := clientRed.Do(req)
 	//check if an error occured and if the error isnt the redirect prevention
-	if err != nil && !strings.Contains(err.Error(), "lsf_error") {
-		return false, err
+	if err != nil {
+		switch err.(type) {
+		case lsferror:
+			break
+		default:
+			return false, err
+		}
 	}
-
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 302 {

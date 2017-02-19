@@ -575,28 +575,26 @@ func UserSignIn(username, password string) (*User, error) {
 		}
 		if !valid {
 			return nil, ErrUserNotExist{0, username, 0}
-		} else {
-			user = &User{
-				Name:     username,
-				Email:    email,
-				Passwd:   password,
-				IsActive: true,
-			}
-			if err := CreateUser(user); err != nil {
+		}
+		user = &User{
+			Name:     username,
+			Email:    email,
+			Passwd:   password,
+			IsActive: true,
+		}
+		if err := CreateUser(user); err != nil {
+			return nil, err
+		}
+		log.Trace("Account created: %s", user.Name)
+
+		// Auto-set admin for the only user.
+		if CountUsers() == 1 {
+			user.IsAdmin = true
+			user.IsActive = true
+			if err := UpdateUser(user); err != nil {
 				return nil, err
 			}
-			log.Trace("Account created: %s", user.Name)
-
-			// Auto-set admin for the only user.
-			if CountUsers() == 1 {
-				user.IsAdmin = true
-				user.IsActive = true
-				if err := UpdateUser(user); err != nil {
-					return nil, err
-				}
-			}
 		}
-
 	}
 
 	if user.ValidatePassword(password) {
